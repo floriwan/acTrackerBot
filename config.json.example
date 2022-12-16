@@ -1,3 +1,7 @@
 {
-    "discordauthtoken" : ""
+    "discordauthtoken" : "xxxxx",
+    "adsbrapidapikey": "xxxxx",
+    "adsbrapidapihost": "adsbexchange-com1.p.rapidapi.com"
+    "acdburl": "https://downloads.adsbexchange.com/downloads/basic-ac-db.json.gz",
+    "acdbfilename": "basic-ac-db.json.gz"
 }
