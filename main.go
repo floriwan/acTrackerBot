@@ -45,7 +45,7 @@ func main() {
 	for {
 		select {
 		case msg := <-ch:
-			fmt.Printf("recv msg from tracker %v\n", msg)
+			fmt.Printf("rcv msg from tracker %v\n", msg)
 		case <-stop:
 			log.Println("Graceful shutdown")
 			return
