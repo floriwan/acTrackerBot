@@ -12,6 +12,7 @@ type Configuration struct {
 	Adsbrapidapihost string `json:"adsbrapidapihost"`
 	Acdburl          string `json:"acdburl"`
 	Acdbfilename     string `json:"acdbfilename"`
+	UpdateIntervall  int    `json:"updateIntervall"`
 }
 
 var Conf = Configuration{}

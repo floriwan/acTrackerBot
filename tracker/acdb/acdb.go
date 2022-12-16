@@ -42,6 +42,11 @@ func Setup(conf config.Configuration) {
 	}
 }
 
+func IsValidReg(reg string) bool {
+	_, ok := aircrafts[reg]
+	return ok
+}
+
 func readAircraftData(filename string) error {
 
 	fi, err := os.Open(filename)
@@ -71,13 +76,13 @@ func readAircraftData(filename string) error {
 		a := aircraft{}
 		err = json.Unmarshal([]byte(v), &a)
 		if err != nil {
-			fmt.Printf("read line: %v\n", v)
+			log.Printf("read line: %v\n", v)
 			return err
 		}
 		aircrafts[a.Reg] = a
 	}
 
-	fmt.Printf("aircraft database size: %v\n", len(aircrafts))
+	log.Printf("aircraft database size: %v\n", len(aircrafts))
 	return nil
 }
 
@@ -92,7 +97,7 @@ func downloadAircraftData(url string, filename string) error {
 	}
 	defer out.Close()
 
-	fmt.Printf("download aircraft database: %v\n", url)
+	log.Printf("download aircraft database: %v\n", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -113,17 +118,13 @@ func downloadAircraftData(url string, filename string) error {
 
 func isFileOlderThan1Day(filename string) bool {
 
-	fmt.Printf("is file %v older than 1 day ", filename)
 	info, err := os.Stat(filename)
 	if errors.Is(err, os.ErrNotExist) {
-		fmt.Printf("does not exists -> false\n")
 		return true
 	}
 
 	today := time.Now()
 	yesterday := today.Add(-24 * time.Hour)
-
-	fmt.Printf("file exists -> %v\n", yesterday.After(info.ModTime()))
 	return yesterday.After(info.ModTime())
 
 }

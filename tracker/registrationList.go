@@ -1,5 +1,6 @@
 package tracker
 
+/*
 import (
 	"fmt"
 	"strings"
@@ -7,29 +8,17 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type TrackerError struct {
-	desc string
-}
-
-func (m TrackerError) Error() string {
-	return m.desc
-}
-
 var aircraftRegistrations []string
 
 func Add(reg string) error {
 	if slices.Contains(aircraftRegistrations, reg) {
-		return TrackerError{desc: fmt.Sprintf("registration %v is already in tracked aircraft list", reg)}
+		return fmt.Errorf("registration %v is already in tracked aircraft list", reg)
 	}
 	aircraftRegistrations = append(aircraftRegistrations, reg)
 	return nil
 }
 
 func Remove(reg string) error {
-	/*fmt.Printf("remove reg %v\n", reg)
-	if slices.Contains(aircraftRegistrations, reg) {
-		return TrackerError{desc: fmt.Sprintf("registration %v not found in tracked aircraft list", reg)}
-	}*/
 
 	aircraftRegistrations = findAndDelete(aircraftRegistrations, reg)
 	fmt.Printf("%v\n", aircraftRegistrations)
@@ -54,3 +43,4 @@ func Size() int {
 func List() string {
 	return strings.Join(aircraftRegistrations, ", ")
 }
+*/

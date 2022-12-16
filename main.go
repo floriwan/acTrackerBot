@@ -17,11 +17,11 @@ func init() {
 }
 
 func main() {
-	fmt.Printf("starting discord bot ...\n")
+	log.Printf("starting discord bot ...\n")
 
 	dg, err := discordgo.New("Bot " + config.Conf.Discordbottoken)
 	if err != nil {
-		fmt.Println("error creating discord session,", err)
+		log.Fatal("error creating discord session,", err)
 		return
 	}
 
@@ -31,7 +31,7 @@ func main() {
 	// open websocket for listening
 	err = dg.Open()
 	if err != nil {
-		fmt.Println("error opening connection,", err)
+		log.Fatal("error opening connection,", err)
 		return
 	}
 	defer dg.Close()
@@ -45,7 +45,7 @@ func main() {
 	for {
 		select {
 		case msg := <-ch:
-			fmt.Printf("rcv msg from tracker %v\n", msg)
+			log.Printf("rcv msg from tracker %v\n", msg)
 		case <-stop:
 			log.Println("Graceful shutdown")
 			return
@@ -55,7 +55,7 @@ func main() {
 }
 
 func handlerReady(s *discordgo.Session, r *discordgo.Ready) {
-	fmt.Println("bot is ready ...")
+	log.Println("bot is ready ...")
 }
 
 func handlerCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -66,23 +66,24 @@ func handlerCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	// all bot commands start with a '!'
 	if !strings.HasPrefix(m.Content, "!") {
-		fmt.Printf("not a bot command")
+		log.Printf("not a bot command")
 		return
 	}
 
 	if strings.HasPrefix(m.Content, "!add ") {
 		reg := strings.Split(m.Content, " ")
-		fmt.Printf("add new registration %v\n", reg[1])
-		tracker.Add(reg[1])
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("new registration list size: %v", tracker.Size()))
+		if err := tracker.AddNewReg(reg[1]); err != nil {
+			s.ChannelMessageSend(m.ChannelID, ("registration is not valid"))
+		}
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("new registration list size: %v", tracker.GetRegListSize()))
 	} else if strings.HasPrefix(m.Content, "!list") {
-		fmt.Printf("list all registrations\n")
-		s.ChannelMessageSend(m.ChannelID, tracker.List())
+		s.ChannelMessageSend(m.ChannelID, tracker.GetRegList())
 	} else if strings.HasPrefix(m.Content, "!remove ") {
 		reg := strings.Split(m.Content, " ")
-		fmt.Printf("remove registration %v\n", reg[1])
-		tracker.Remove(reg[1])
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("new registration list size: %v", tracker.Size()))
+		if err := tracker.RemoveReg(reg[1]); err != nil {
+			s.ChannelMessageSend(m.ChannelID, ("registration is not valid"))
+		}
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("new registration list size: %v", tracker.GetRegListSize()))
 	} else if strings.HasPrefix(m.Content, "!help") {
 		s.ChannelMessageSend(m.ChannelID, "commands !add <reg>, !remove <reg>, !list, !help")
 	} else {
