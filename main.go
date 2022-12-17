@@ -52,7 +52,7 @@ func main() {
 			log.Printf("-> rcv aircraft from tracker %v\n", acStatus)
 
 			discord.SendDiscordMessageWithWebhook(dg,
-				fmt.Sprintf("Registration: **%v** Callsign: **%v**\n```status: %v\nground speed: %v\nalt geom: %v\nlat: %v lon: %v```",
+				fmt.Sprintf("Registration: **%v** Callsign: **%v**\n```status: %v\nground speed: %v kt\nalt geom: %v ft\nlat: %v long: %v```",
 					acStatus.Reg, acStatus.Callsign, acStatus.Status.String(), acStatus.Speed, acStatus.AltGeom, acStatus.Lat, acStatus.Lon))
 
 		case <-stop:
