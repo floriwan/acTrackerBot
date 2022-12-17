@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-type aircraft struct {
+type Aircraft struct {
 	Icao         string
 	Reg          string
 	Icaotype     string
@@ -29,10 +29,10 @@ type aircraft struct {
 	Mil          bool
 }
 
-var aircrafts map[string]aircraft
+var aircrafts map[string]Aircraft
 
 func Setup(conf config.Configuration) {
-	aircrafts = make(map[string]aircraft)
+	aircrafts = make(map[string]Aircraft)
 
 	if err := downloadAircraftData(conf.Acdburl, conf.Acdbfilename); err != nil {
 		log.Fatalf("unable to download aircraft data %v", err)
@@ -40,6 +40,10 @@ func Setup(conf config.Configuration) {
 	if err := readAircraftData(conf.Acdbfilename); err != nil {
 		panic(err)
 	}
+}
+
+func GetAircraftData(reg string) Aircraft {
+	return aircrafts[reg]
 }
 
 func IsValidReg(reg string) bool {
@@ -73,7 +77,7 @@ func readAircraftData(filename string) error {
 			continue
 		}
 		v = v + "}"
-		a := aircraft{}
+		a := Aircraft{}
 		err = json.Unmarshal([]byte(v), &a)
 		if err != nil {
 			log.Printf("read line: %v\n", v)

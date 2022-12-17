@@ -9,12 +9,12 @@ type AdsbExchData struct {
 }
 
 type ac struct {
-	Hex              string   `json:"hex"`
-	Actype           string   `json:"actype"`
-	Flight           string   `json:"flight"`
-	R                string   `json:"r"`
-	T                string   `json:"t"`
-	Alt_baro         int      `json:"alt_baro"`
+	Hex    string `json:"hex"`
+	Actype string `json:"actype"`
+	Flight string `json:"flight"`
+	R      string `json:"r"`
+	T      string `json:"t"`
+	//Alt_baro         int      `json:"alt_baro"`   // we have int or string values here, ignore this field
 	Alt_geom         int      `json:"alt_geom"`
 	Gs               float32  `json:"gs"`
 	Track            float32  `json:"track"`

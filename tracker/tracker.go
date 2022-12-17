@@ -13,19 +13,19 @@ import (
 	"time"
 )
 
-var ch chan string
+var updateChannel chan types.AircraftInformation
 var stopChannels map[string]chan int
 
-func StartUp() <-chan string {
+func StartUp() <-chan types.AircraftInformation {
 	stopChannels = make(map[string]chan int)
 	go readRegistrationDatabase()
-	ch = make(chan string)
-	return ch
+	updateChannel = make(chan types.AircraftInformation)
+	return updateChannel
 }
 
 func readRegistrationDatabase() {
 	acdb.Setup(config.Conf)
-	ch <- "db ready"
+	//updateChannel <- "db ready"
 }
 
 func GetRegListSize() int {
@@ -73,7 +73,19 @@ func startTracker(interval int, reg string) {
 		select {
 		case <-ticker.C:
 			log.Printf("update reg '%v'\n", reg)
-			requestData(reg)
+			data := requestData(reg)
+			processData(reg, data)
+
+			if newStatus(reg) {
+				log.Printf("'%v' new aircraft state: %v\n", reg, getCurrentAircraftInfo(reg))
+				info := getCurrentAircraftInfo(reg)
+				aircraftData := acdb.GetAircraftData(reg)
+				info.IcaoType = aircraftData.Icaotype
+				updateChannel <- info
+			} else {
+				log.Printf("'%v' no status change: %v\n", reg, getCurrentAircraftInfo(reg))
+			}
+
 		case <-sc:
 			log.Printf("stop update for registration '%v'\n", reg)
 			return
@@ -82,7 +94,7 @@ func startTracker(interval int, reg string) {
 
 }
 
-func requestData(reg string) {
+func requestData(reg string) (data types.AdsbExchData) {
 	url := fmt.Sprintf("https://adsbexchange-com1.p.rapidapi.com/v2/registration/%v/", reg)
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("X-RapidAPI-Key", config.Conf.Adsbrapidapikey)
@@ -97,23 +109,12 @@ func requestData(reg string) {
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
 
-	a := types.AdsbExchData{}
-	err = json.Unmarshal(body, &a)
+	data = types.AdsbExchData{}
+	err = json.Unmarshal(body, &data)
 	if err != nil {
 		fmt.Printf("can not unmarshal %v\n%v\n", string(body), err)
 		return
 	}
 
-	if len(a.Ac) == 0 {
-		ch <- fmt.Sprintf("'%v' -> is not moving", reg)
-		log.Printf("'%v' -> is not moving\n", reg)
-		return
-	}
-
-	if a.Ac[0].Gs > 0.0 {
-		ch <- fmt.Sprintf("'%v' -> is moving, gs: %v, lat: %v, lon: %v",
-			reg, a.Ac[0].Gs, a.Ac[0].Lat, a.Ac[0].Lon)
-		log.Printf("'%v' -> is moving, gs: %v, lat: %v, lon: %v\n",
-			reg, a.Ac[0].Gs, a.Ac[0].Lat, a.Ac[0].Lon)
-	}
+	return data
 }
