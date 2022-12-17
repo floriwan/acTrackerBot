@@ -165,8 +165,10 @@ func startAircraftTracker(interval int, reg string) {
 			processData(reg, data)
 
 			if newStatus(reg) {
-				//log.Printf("'%v' new aircraft state: %v\n", reg, getCurrentAircraftInfo(reg))
 				info := getCurrentAircraftInfo(reg)
+				info.Origin = "unknown"
+				info.Destination = "unknown"
+				addFlightawareData(info.Callsign, &info)
 				aircraftData := acdb.GetAircraftData(reg)
 				info.IcaoType = aircraftData.Icaotype
 				updateChannel <- info
@@ -179,6 +181,45 @@ func startAircraftTracker(interval int, reg string) {
 			log.Printf("stop aircraft tracker for registration '%v'\n", reg)
 			return
 		}
+	}
+
+}
+
+func addFlightawareData(callsign string, aircraftInfo *types.AircraftInformation) {
+	url := fmt.Sprintf("https://aeroapi.flightaware.com/aeroapi/flights/search?query=-idents+%v", callsign)
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Add("x-apikey", config.Conf.Flightawareapikey)
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Printf("unable to request flightaware data: error %v\n", err)
+		return
+	}
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	flightawareData := types.FlightawareFlights{}
+	err = json.Unmarshal(body, &flightawareData)
+	if err != nil {
+		log.Printf("can not unmarshal %v\n%v\n", string(body), err)
+		return
+	}
+
+	log.Printf("flightaware data len: %v\n", len(flightawareData.Flights))
+	if len(flightawareData.Flights) < 1 {
+		log.Printf("no flightaware data available\n")
+		return
+	}
+
+	log.Printf("%v : %v -> %v\n", callsign, flightawareData.Flights[0].Origin.Code, flightawareData.Flights[0].Destination.Code)
+
+	if flightawareData.Flights[0].Origin.Code != "" {
+		aircraftInfo.Origin = flightawareData.Flights[0].Origin.Code
+	}
+
+	if flightawareData.Flights[0].Destination.Code != "" {
+		aircraftInfo.Destination = flightawareData.Flights[0].Destination.Code
 	}
 
 }

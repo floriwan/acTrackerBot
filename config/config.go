@@ -12,6 +12,7 @@ type Configuration struct {
 	Discrodwebhooktoken   string `json:"discrodwebhooktoken"`
 	Adsbrapidapikey       string `json:"adsbrapidapikey"`
 	Adsbrapidapihost      string `json:"adsbrapidapihost"`
+	Flightawareapikey     string `json:"flightawareapikey"`
 	Acdburl               string `json:"acdburl"`
 	Acdbfilename          string `json:"acdbfilename"`
 	UpdateIntervall       int    `json:"updateIntervall"`
