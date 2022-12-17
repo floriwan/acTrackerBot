@@ -11,23 +11,63 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
 	"time"
 )
+
+// channel to send new registration to tracker
+var AddRegistrationChannel chan string
+
+// channel to remove registration from tracker
+var RemoveRegistrationChannel chan string
 
 var updateChannel chan types.AircraftInformation
 var stopChannels map[string]chan int
 
 func StartUp() <-chan types.AircraftInformation {
+
+	if AddRegistrationChannel == nil || RemoveRegistrationChannel == nil {
+		log.Fatalf("add and remove channel is not initialized")
+	}
+
 	stopChannels = make(map[string]chan int)
 
-	go func() {
-		readRegistrationDatabase()
-		readRegistrationList()
-	}()
+	readRegistrationDatabase()
+	readRegistrationList()
+
+	go runTracker()
 
 	updateChannel = make(chan types.AircraftInformation)
 	return updateChannel
+}
+
+func runTracker() {
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+
+	log.Printf("tracker is running\n")
+
+	for {
+		select {
+		case reg := <-AddRegistrationChannel:
+			addNewReg(reg)
+		case reg := <-RemoveRegistrationChannel:
+			removeReg(reg)
+		case <-stop:
+			log.Printf("stopping tracker\n")
+			saveRegistrationList()
+			stopAllAircraftTracker()
+		}
+	}
+}
+
+func stopAllAircraftTracker() {
+	log.Println("stopping all aircraft tracker")
+	for _, v := range stopChannels {
+		v <- 0
+	}
 }
 
 func readRegistrationDatabase() {
@@ -46,7 +86,7 @@ func GetRegList() string {
 	return strings.Join(keys, ", ")
 }
 
-func RemoveReg(reg string) error {
+func removeReg(reg string) error {
 	c, ok := stopChannels[reg]
 	if !ok {
 		return fmt.Errorf("no update process for reg '%v' found", reg)
@@ -60,11 +100,11 @@ func RemoveReg(reg string) error {
 	return nil
 }
 
-func AddNewReg(reg string) error {
+func addNewReg(reg string) error {
 	if !acdb.IsValidReg(reg) {
 		return fmt.Errorf("registration '%v' is not a valid registration", reg)
 	}
-	go startTracker(config.Conf.UpdateIntervall, reg)
+	go startAircraftTracker(config.Conf.UpdateIntervall, reg)
 	return nil
 }
 
@@ -83,13 +123,13 @@ func readRegistrationList() error {
 
 	// after all registrations are read, add them to the tracker
 	for _, line := range lines {
-		AddNewReg(line)
+		addNewReg(line)
 	}
 
 	return nil
 }
 
-func SaveRegistrationList() error {
+func saveRegistrationList() error {
 	file, err := os.Create(config.Conf.Callsignllistfilename)
 	if err != nil {
 		return err
@@ -109,8 +149,8 @@ func SaveRegistrationList() error {
 
 }
 
-func startTracker(interval int, reg string) {
-	log.Printf("starting new tracker for '%v'\n", reg)
+func startAircraftTracker(interval int, reg string) {
+	log.Printf("starting new aircraft tracker for '%v'\n", reg)
 
 	sc := make(chan int)
 	stopChannels[reg] = sc
@@ -125,17 +165,18 @@ func startTracker(interval int, reg string) {
 			processData(reg, data)
 
 			if newStatus(reg) {
-				log.Printf("'%v' new aircraft state: %v\n", reg, getCurrentAircraftInfo(reg))
+				//log.Printf("'%v' new aircraft state: %v\n", reg, getCurrentAircraftInfo(reg))
 				info := getCurrentAircraftInfo(reg)
 				aircraftData := acdb.GetAircraftData(reg)
 				info.IcaoType = aircraftData.Icaotype
 				updateChannel <- info
-			} else {
-				log.Printf("'%v' no status change: %v\n", reg, getCurrentAircraftInfo(reg))
 			}
+			//else {
+			//	log.Printf("'%v' no status change: %v\n", reg, getCurrentAircraftInfo(reg))
+			//}
 
 		case <-sc:
-			log.Printf("stop update for registration '%v'\n", reg)
+			log.Printf("stop aircraft tracker for registration '%v'\n", reg)
 			return
 		}
 	}
