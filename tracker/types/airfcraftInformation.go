@@ -4,6 +4,7 @@ type AircraftInformation struct {
 	Reg         string
 	IcaoType    string
 	Callsign    string
+	Squawk      string
 	Status      AircraftStatus
 	Lat         float32
 	Lon         float32

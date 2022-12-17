@@ -161,7 +161,7 @@ func startAircraftTracker(interval int, reg string) {
 		select {
 		case <-ticker.C:
 			log.Printf("update reg '%v'\n", reg)
-			data := requestData(reg)
+			data := requestAdsbExchangeData(reg)
 			processData(reg, data)
 
 			if newStatus(reg) {
@@ -224,7 +224,7 @@ func addFlightawareData(callsign string, aircraftInfo *types.AircraftInformation
 
 }
 
-func requestData(reg string) (data types.AdsbExchData) {
+func requestAdsbExchangeData(reg string) (data types.AdsbExchData) {
 	url := fmt.Sprintf("https://adsbexchange-com1.p.rapidapi.com/v2/registration/%v/", reg)
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("X-RapidAPI-Key", config.Conf.Adsbrapidapikey)

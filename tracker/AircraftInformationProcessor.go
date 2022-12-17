@@ -66,6 +66,7 @@ func updateAircraft(reg string, data types.AdsbExchData) {
 	acData.CurrentAircraftInfo.Lat = data.Ac[0].Lat
 	acData.CurrentAircraftInfo.Lon = data.Ac[0].Lon
 	acData.CurrentAircraftInfo.Callsign = data.Ac[0].Flight
+	acData.CurrentAircraftInfo.Squawk = data.Ac[0].Squawk
 
 	if data.Ac[0].Gs > 0 {
 		acData.CurrentAircraftInfo.Status = types.Moving
