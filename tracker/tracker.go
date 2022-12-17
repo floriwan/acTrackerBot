@@ -4,11 +4,13 @@ import (
 	"acTrackerBot/config"
 	"acTrackerBot/tracker/acdb"
 	"acTrackerBot/tracker/types"
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -18,14 +20,18 @@ var stopChannels map[string]chan int
 
 func StartUp() <-chan types.AircraftInformation {
 	stopChannels = make(map[string]chan int)
-	go readRegistrationDatabase()
+
+	go func() {
+		readRegistrationDatabase()
+		readRegistrationList()
+	}()
+
 	updateChannel = make(chan types.AircraftInformation)
 	return updateChannel
 }
 
 func readRegistrationDatabase() {
 	acdb.Setup(config.Conf)
-	//updateChannel <- "db ready"
 }
 
 func GetRegListSize() int {
@@ -50,6 +56,7 @@ func RemoveReg(reg string) error {
 	log.Printf("stopping update process for '%v'\n", reg)
 	c <- 0
 	delete(stopChannels, reg)
+	close(c)
 	return nil
 }
 
@@ -59,6 +66,47 @@ func AddNewReg(reg string) error {
 	}
 	go startTracker(config.Conf.UpdateIntervall, reg)
 	return nil
+}
+
+func readRegistrationList() error {
+	file, err := os.Open(config.Conf.Callsignllistfilename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	// after all registrations are read, add them to the tracker
+	for _, line := range lines {
+		AddNewReg(line)
+	}
+
+	return nil
+}
+
+func SaveRegistrationList() error {
+	file, err := os.Create(config.Conf.Callsignllistfilename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	keys := make([]string, 0, len(stopChannels))
+	for k := range stopChannels {
+		keys = append(keys, k)
+	}
+
+	w := bufio.NewWriter(file)
+	for _, line := range keys {
+		fmt.Fprintln(w, line)
+	}
+	return w.Flush()
+
 }
 
 func startTracker(interval int, reg string) {

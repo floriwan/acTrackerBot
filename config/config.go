@@ -7,14 +7,15 @@ import (
 )
 
 type Configuration struct {
-	Discordbottoken     string `json:"discordbottoken"`
-	Discrodwebhookid    string `json:"discrodwebhookid"`
-	Discrodwebhooktoken string `json:"discrodwebhooktoken"`
-	Adsbrapidapikey     string `json:"adsbrapidapikey"`
-	Adsbrapidapihost    string `json:"adsbrapidapihost"`
-	Acdburl             string `json:"acdburl"`
-	Acdbfilename        string `json:"acdbfilename"`
-	UpdateIntervall     int    `json:"updateIntervall"`
+	Discordbottoken       string `json:"discordbottoken"`
+	Discrodwebhookid      string `json:"discrodwebhookid"`
+	Discrodwebhooktoken   string `json:"discrodwebhooktoken"`
+	Adsbrapidapikey       string `json:"adsbrapidapikey"`
+	Adsbrapidapihost      string `json:"adsbrapidapihost"`
+	Acdburl               string `json:"acdburl"`
+	Acdbfilename          string `json:"acdbfilename"`
+	UpdateIntervall       int    `json:"updateIntervall"`
+	Callsignllistfilename string `json:"callsignllistfilename"`
 }
 
 var Conf = Configuration{}

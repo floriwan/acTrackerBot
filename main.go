@@ -58,9 +58,10 @@ func main() {
 			}
 
 			dg.ChannelMessageSend(webhook.ChannelID,
-				fmt.Sprintf("Registration: **%v** Type: **%v**\n```status: %v\nground speed: %v\nlat: %v lon: %v```",
-					acStatus.Reg, acStatus.IcaoType, acStatus.Status.String(), acStatus.Speed, acStatus.Lat, acStatus.Lon))
+				fmt.Sprintf("Registration: **%v** Callsign: **%v**\n```status: %v\nground speed: %v\nalt geom: %v\nlat: %v lon: %v```",
+					acStatus.Reg, acStatus.Callsign, acStatus.Status.String(), acStatus.Speed, acStatus.AltGeom, acStatus.Lat, acStatus.Lon))
 		case <-stop:
+			tracker.SaveRegistrationList()
 			log.Println("Graceful shutdown")
 			return
 		}
@@ -101,7 +102,7 @@ func handlerCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	} else if strings.HasPrefix(m.Content, "!add ") {
 		reg := strings.Split(m.Content, " ")
 		if err := tracker.AddNewReg(reg[1]); err != nil {
-			s.ChannelMessageSend(m.ChannelID, ("registration is not valid"))
+			s.ChannelMessageSend(m.ChannelID, err.Error())
 		}
 		//s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("new registration list: %v", tracker.GetRegList()))
 	} else if strings.HasPrefix(m.Content, "!list") {

@@ -7,4 +7,5 @@
     "acdburl": "https://downloads.adsbexchange.com/downloads/basic-ac-db.json.gz",
     "acdbfilename": "basic-ac-db.json.gz"
     "updateIntervall": 5
+    "callsignllistfilename": "callsignlist"
 }
