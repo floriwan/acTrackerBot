@@ -58,8 +58,8 @@ func main() {
 			}
 
 			dg.ChannelMessageSend(webhook.ChannelID,
-				fmt.Sprintf("**%v** Type: %v\n```status: %v\nground speed: %v\nlat: %v lon: %v```",
-					acStatus.IcaoType, acStatus.Reg, acStatus.Status.String(), acStatus.Speed, acStatus.Lat, acStatus.Lon))
+				fmt.Sprintf("Registration: **%v** Type: **%v**\n```status: %v\nground speed: %v\nlat: %v lon: %v```",
+					acStatus.Reg, acStatus.IcaoType, acStatus.Status.String(), acStatus.Speed, acStatus.Lat, acStatus.Lon))
 		case <-stop:
 			log.Println("Graceful shutdown")
 			return
