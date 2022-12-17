@@ -1,13 +1,8 @@
-# syntax=docker/dockerfile:1
+FROM golang:latest
 
-FROM golang:1.16-alpine
-
+RUN mkdir /app
 WORKDIR /app
-
 COPY . .
+RUN go build -o main .
 
-RUN go mod download
-
-RUN go build -o acTrackerBot
-
-CMD [ "./acTrackerBot" ]
+CMD ["/app/main"]

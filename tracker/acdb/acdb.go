@@ -16,17 +16,17 @@ import (
 )
 
 type Aircraft struct {
-	Icao         string
-	Reg          string
-	Icaotype     string
-	Year         string
-	Manufacturer string
-	Model        string
-	Ownop        string
-	Faa_pia      bool
-	Faa_ladd     bool
-	Short_type   string
-	Mil          bool
+	Icao         string `json:"icao"`
+	Reg          string `json:"reg"`
+	Icaotype     string `json:"icaotype"`
+	Year         string `json:"year"`
+	Manufacturer string `json:"manufacturer"`
+	Model        string `json:"model"`
+	Ownop        string `json:"ownop"`
+	Faa_pia      bool   `json:"faa_pia"`
+	Faa_ladd     bool   `json:"faa_ladd"`
+	Short_type   string `json:"short_type"`
+	Mil          bool   `json:"mil"`
 }
 
 var aircrafts map[string]Aircraft
@@ -77,12 +77,26 @@ func readAircraftData(filename string) error {
 			continue
 		}
 		v = v + "}"
-		a := Aircraft{}
+		a := Aircraft{Year: "unknown", Manufacturer: "unknown", Model: "unknown", Ownop: "unknown"}
 		err = json.Unmarshal([]byte(v), &a)
 		if err != nil {
 			log.Printf("read line: %v\n", v)
 			return err
 		}
+
+		if a.Year == "" {
+			a.Year = "unknown"
+		}
+		if a.Manufacturer == "" {
+			a.Manufacturer = "unknown"
+		}
+		if a.Model == "" {
+			a.Model = "unknown"
+		}
+		if a.Ownop == "" {
+			a.Ownop = "unknown"
+		}
+
 		aircrafts[a.Reg] = a
 	}
 

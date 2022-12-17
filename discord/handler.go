@@ -29,15 +29,33 @@ func HandlerCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if strings.HasPrefix(m.Content, "!info ") {
 		reg := strings.Split(m.Content, " ")
 		data := acdb.GetAircraftData(reg[1])
-
+		//log.Printf("%+v\n", data)
 		if data.Reg == "" {
 			s.ChannelMessageSend(m.ChannelID,
 				fmt.Sprintf("**%v**\nno information found, maybe registration is not valid",
 					reg[1]))
 		} else {
-			s.ChannelMessageSend(m.ChannelID,
-				fmt.Sprintf("**%v**\n```Type: %v Model: %v\nManufacturer: %v\nYear: %v\nOwner: %v```",
-					data.Reg, data.Icaotype, data.Model, data.Manufacturer, data.Year, data.Ownop))
+
+			_, err := s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+				Content: fmt.Sprintf("information for %v", data.Reg),
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						//Title: data.Reg,
+						//Description: fmt.Sprintf("ICAO type: %v model: %v", data.Icaotype, data.Model),
+						Fields: []*discordgo.MessageEmbedField{
+							{Name: "ICAO", Value: data.Icaotype, Inline: true},
+							{Name: "Model", Value: data.Model, Inline: true},
+							{Name: "Manufacturer", Value: data.Manufacturer},
+							{Name: "Year", Value: data.Year},
+							{Name: "Owner", Value: data.Ownop},
+						},
+					},
+				},
+			})
+			if err != nil {
+				log.Printf("error %v\n", err)
+			}
+
 		}
 
 	} else if strings.HasPrefix(m.Content, "!add ") {
