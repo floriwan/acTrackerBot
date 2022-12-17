@@ -75,7 +75,7 @@ func handlerCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if err := tracker.AddNewReg(reg[1]); err != nil {
 			s.ChannelMessageSend(m.ChannelID, ("registration is not valid"))
 		}
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("new registration list size: %v", tracker.GetRegListSize()))
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("new registration list: %v", tracker.GetRegList()))
 	} else if strings.HasPrefix(m.Content, "!list") {
 		s.ChannelMessageSend(m.ChannelID, tracker.GetRegList())
 	} else if strings.HasPrefix(m.Content, "!remove ") {
@@ -83,7 +83,7 @@ func handlerCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if err := tracker.RemoveReg(reg[1]); err != nil {
 			s.ChannelMessageSend(m.ChannelID, ("registration is not valid"))
 		}
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("new registration list size: %v", tracker.GetRegListSize()))
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("new registration list: %v", tracker.GetRegList()))
 	} else if strings.HasPrefix(m.Content, "!help") {
 		s.ChannelMessageSend(m.ChannelID, "commands !add <reg>, !remove <reg>, !list, !help")
 	} else {

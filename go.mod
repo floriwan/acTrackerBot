@@ -1,10 +1,10 @@
 module acTrackerBot
 
-go 1.18
+go 1.19
 
 require (
 	github.com/bwmarrin/discordgo v0.26.1
-	golang.org/x/exp v0.0.0-20221215174704-0915cd710c24
+	golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e
 )
 
 require (
