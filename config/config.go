@@ -2,7 +2,7 @@ package config
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"os"
 )
 
@@ -29,7 +29,7 @@ func ReadConfig() {
 	}
 	defer cfile.Close()
 
-	conf, err := ioutil.ReadAll(cfile)
+	conf, err := io.ReadAll(cfile)
 	if err != nil {
 		panic(err)
 	}

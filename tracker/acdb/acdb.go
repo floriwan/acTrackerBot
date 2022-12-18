@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -65,7 +64,7 @@ func readAircraftData(filename string) error {
 	}
 	defer fz.Close()
 
-	s, err := ioutil.ReadAll(fz)
+	s, err := io.ReadAll(fz)
 	if err != nil {
 		return err
 	}

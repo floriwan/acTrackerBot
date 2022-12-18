@@ -7,7 +7,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -55,7 +55,7 @@ func runTracker() {
 		select {
 		case reg := <-AddRegistrationChannel:
 			if err := addNewReg(reg); err != nil {
-				log.Printf(err.Error())
+				log.Printf("%v\n", err.Error())
 			}
 		case reg := <-RemoveRegistrationChannel:
 			removeReg(reg)
@@ -201,7 +201,7 @@ func addFlightawareData(callsign string, aircraftInfo *types.AircraftInformation
 	}
 
 	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
+	body, _ := io.ReadAll(res.Body)
 
 	flightawareData := types.FlightawareFlights{}
 	err = json.Unmarshal(body, &flightawareData)
@@ -241,7 +241,7 @@ func requestAdsbExchangeData(reg string) (data types.AdsbExchData) {
 	}
 
 	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
+	body, _ := io.ReadAll(res.Body)
 
 	data = types.AdsbExchData{}
 	err = json.Unmarshal(body, &data)
