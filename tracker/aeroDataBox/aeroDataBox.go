@@ -24,9 +24,16 @@ func GetFlightInfo(reg string) (status *FlightStatus, err error) {
 	}
 
 	for _, v := range flightStatusList {
-		log.Printf("flight status: %+v\n", v)
+		//log.Printf("flight status: %+v\n", v)
 		departureTime := v.FlightDeparture.ScheduledTimeUtc
 		arrivalTime := v.FlightArrival.ScheduledTimeUtc
+
+		log.Printf("check flight %v>%v status: %v, dep: %v arr: %v\n",
+			v.FlightDeparture.DepartureAirport.Icao,
+			v.FlightArrival.ArrivalAirport.Icao,
+			v.FlightStatus,
+			v.FlightDeparture.ScheduledTimeUtc,
+			v.FlightArrival.ScheduledTimeUtc)
 
 		if departureTime == "" || arrivalTime == "" {
 			log.Printf("departure %v or arrival %v time not set", departureTime, arrivalTime)
@@ -47,8 +54,8 @@ func GetFlightInfo(reg string) (status *FlightStatus, err error) {
 
 		utcTime := time.Now().UTC()
 
-		if depTime.Before(utcTime) && arrTime.After(utcTime) {
-			//fmt.Printf("-> found flight : %+v\n", v)
+		if depTime.Before(utcTime) && arrTime.After(utcTime) ||
+			v.FlightStatus == "EnRoute" {
 			status = &v
 			return status, nil
 		}

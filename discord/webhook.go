@@ -85,7 +85,6 @@ func GetEmbedMessage(data types.AircraftInformation) (embed []*discordgo.Message
 			{Name: "Flight", Value: fmt.Sprintf("%v > %v", data.Origin, data.Destination), Inline: true},
 			{Name: "Flight Status", Value: data.FlightStatus, Inline: true},
 			{Name: "Flight Callsign", Value: data.Callsign, Inline: true},
-			//{Name: "Arrival", Value: arrival, Inline: true},
 			{Name: "Status", Value: data.Status.String()},
 			{Name: "Speed (kt)", Value: fmt.Sprintf("%v", data.Speed), Inline: true},
 			{Name: "Altitude (ft)", Value: fmt.Sprintf("%v", data.AltGeom), Inline: true},
