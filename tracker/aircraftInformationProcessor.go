@@ -54,8 +54,8 @@ func updateAircraft(reg string, data types.AdsbExchData) {
 	acData.CurrentAdsbExchData = data
 
 	if len(data.Ac) == 0 {
-		log.Printf("no data available for %v", reg)
-		acData.CurrentAircraftInfo.Status = types.Standing
+		//log.Printf("no data available for %v", reg)
+		acData.CurrentAircraftInfo.Status = types.Parking
 		return
 	}
 
@@ -69,7 +69,7 @@ func updateAircraft(reg string, data types.AdsbExchData) {
 	acData.CurrentAircraftInfo.Squawk = data.Ac[0].Squawk
 
 	if data.Ac[0].Gs > 0 {
-		acData.CurrentAircraftInfo.Status = types.Moving
+		acData.CurrentAircraftInfo.Status = types.Taxing
 	}
 
 	if data.Ac[0].Gs > 0 && data.Ac[0].Alt_geom > 0 {
@@ -83,7 +83,7 @@ func updateAircraft(reg string, data types.AdsbExchData) {
 }
 
 func addAircraft(reg string, data types.AdsbExchData) {
-	acData := aircraftData{CurrentAircraftInfo: types.AircraftInformation{Reg: reg, Status: types.Standing}}
+	acData := aircraftData{CurrentAircraftInfo: types.AircraftInformation{Reg: reg, Status: types.Parking}}
 	acData.CurrentAdsbExchData = data
 	lastAircraftInfo[reg] = &acData
 }

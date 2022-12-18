@@ -3,6 +3,7 @@ package tracker
 import (
 	"acTrackerBot/config"
 	"acTrackerBot/tracker/acdb"
+	"acTrackerBot/tracker/aeroDataBox"
 	"acTrackerBot/tracker/types"
 	"bufio"
 	"encoding/json"
@@ -22,11 +23,15 @@ var AddRegistrationChannel chan string
 // channel to remove registration from tracker
 var RemoveRegistrationChannel chan string
 
+// send aircraft update information back through this channel
 var updateChannel chan types.AircraftInformation
+
+// all aircraft trackers have a channel in this map to stop the goroutine
 var stopChannels map[string]chan int
 
 func StartUp() <-chan types.AircraftInformation {
 
+	// this channels must be initialized from the sender
 	if AddRegistrationChannel == nil || RemoveRegistrationChannel == nil {
 		log.Fatalf("add and remove channel is not initialized")
 	}
@@ -54,15 +59,22 @@ func runTracker() {
 	for {
 		select {
 		case reg := <-AddRegistrationChannel:
+			if reg == "" {
+				log.Println("error: recieve empty add message")
+				continue
+			}
 			if err := addNewReg(reg); err != nil {
 				log.Printf("%v\n", err.Error())
 			}
 		case reg := <-RemoveRegistrationChannel:
+			if reg == "" {
+				log.Println("error: recieve empty remove message")
+				continue
+			}
 			if err := removeReg(reg); err != nil {
 				log.Printf("%v\n", err.Error())
 			}
 		case <-stop:
-			log.Printf("stopping tracker\n")
 			if err := saveRegistrationList(); err != nil {
 				log.Printf("can not save registraion list %v\n", err.Error())
 			}
@@ -95,6 +107,11 @@ func GetRegList() string {
 }
 
 func removeReg(reg string) error {
+
+	if reg == "" {
+		return fmt.Errorf("no registration set to remove update process")
+	}
+
 	c, ok := stopChannels[reg]
 	if !ok {
 		return fmt.Errorf("no update process for reg '%v' found", reg)
@@ -117,6 +134,7 @@ func addNewReg(reg string) error {
 }
 
 func readRegistrationList() error {
+	log.Printf("import last registration list to %v\n", config.Conf.Callsignllistfilename)
 	file, err := os.Open(config.Conf.Callsignllistfilename)
 	if err != nil {
 		return err
@@ -140,6 +158,7 @@ func readRegistrationList() error {
 }
 
 func saveRegistrationList() error {
+	log.Printf("save active registration list to %v\n", config.Conf.Callsignllistfilename)
 	file, err := os.Create(config.Conf.Callsignllistfilename)
 	if err != nil {
 		return err
@@ -170,22 +189,13 @@ func startAircraftTracker(interval int, reg string) {
 	for {
 		select {
 		case <-ticker.C:
-			log.Printf("update reg '%v'\n", reg)
+			//log.Printf("update aircraft '%v'\n", reg)
 			data := requestAdsbExchangeData(reg)
 			processData(reg, data)
 
 			if newStatus(reg) {
-				info := getCurrentAircraftInfo(reg)
-				info.Origin = "unknown"
-				info.Destination = "unknown"
-				addFlightawareData(info.Callsign, &info)
-				aircraftData := acdb.GetAircraftData(reg)
-				info.IcaoType = aircraftData.Icaotype
-				updateChannel <- info
+				sendUpdate(reg)
 			}
-			//else {
-			//	log.Printf("'%v' no status change: %v\n", reg, getCurrentAircraftInfo(reg))
-			//}
 
 		case <-sc:
 			log.Printf("stop aircraft tracker for registration '%v'\n", reg)
@@ -195,45 +205,85 @@ func startAircraftTracker(interval int, reg string) {
 
 }
 
-func addFlightawareData(callsign string, aircraftInfo *types.AircraftInformation) {
-	url := fmt.Sprintf("https://aeroapi.flightaware.com/aeroapi/flights/search?query=-idents+%v", callsign)
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Add("x-apikey", config.Conf.Flightawareapikey)
+func sendUpdate(reg string) {
+	info := getCurrentAircraftInfo(reg)
+	info.Origin = "N/A"
+	info.Destination = "N/A"
+	info.FlightStatus = "N/A"
 
-	res, err := http.DefaultClient.Do(req)
+	flightStatus, err := aeroDataBox.GetFlightInfo(reg)
 	if err != nil {
-		log.Printf("unable to request flightaware data: error %v\n", err)
+		log.Printf("error: %v\n", err)
+		updateChannel <- info
 		return
 	}
 
-	defer res.Body.Close()
-	body, _ := io.ReadAll(res.Body)
+	addFlightStatus(flightStatus, &info)
 
-	flightawareData := types.FlightawareFlights{}
-	err = json.Unmarshal(body, &flightawareData)
-	if err != nil {
-		log.Printf("can not unmarshal %v\n%v\n", string(body), err)
-		return
+	log.Printf("<- send flight status: %v\n", info)
+	updateChannel <- info
+}
+
+func addFlightStatus(info *aeroDataBox.FlightStatus, aicraftInfo *types.AircraftInformation) {
+
+	aicraftInfo.Origin = "N/A"
+	aicraftInfo.Destination = "N/A"
+	aicraftInfo.FlightStatus = "N/A"
+
+	if info.FlightDeparture.DepartureAirport.Icao != "" {
+		aicraftInfo.Origin = info.FlightDeparture.DepartureAirport.Icao
 	}
 
-	log.Printf("flightaware data len: %v\n", len(flightawareData.Flights))
-	if len(flightawareData.Flights) < 1 {
-		log.Printf("no flightaware data available\n")
-		return
+	if info.FlightArrival.ArrivalAirport.Icao != "" {
+		aicraftInfo.Destination = info.FlightArrival.ArrivalAirport.Icao
 	}
 
-	log.Printf("%v : %v -> %v\n", callsign, flightawareData.Flights[0].Origin.Code, flightawareData.Flights[0].Destination.Code)
-
-	if flightawareData.Flights[0].Origin.Code != "" {
-		aircraftInfo.Origin = flightawareData.Flights[0].Origin.Code
-	}
-
-	if flightawareData.Flights[0].Destination.Code != "" {
-		aircraftInfo.Destination = flightawareData.Flights[0].Destination.Code
+	if info.FlightStatus != "" {
+		aicraftInfo.FlightStatus = info.FlightStatus
 	}
 
 }
 
+/*
+	func addFlightawareData(callsign string, aircraftInfo *types.AircraftInformation) {
+		url := fmt.Sprintf("https://aeroapi.flightaware.com/aeroapi/flights/search?query=-idents+%v", callsign)
+		req, _ := http.NewRequest("GET", url, nil)
+		req.Header.Add("x-apikey", config.Conf.Flightawareapikey)
+
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.Printf("unable to request flightaware data: error %v\n", err)
+			return
+		}
+
+		defer res.Body.Close()
+		body, _ := io.ReadAll(res.Body)
+
+		flightawareData := types.FlightawareFlights{}
+		err = json.Unmarshal(body, &flightawareData)
+		if err != nil {
+			log.Printf("can not unmarshal %v\n%v\n", string(body), err)
+			return
+		}
+
+		log.Printf("flightaware data len: %v\n", len(flightawareData.Flights))
+		if len(flightawareData.Flights) < 1 {
+			log.Printf("no flightaware data available\n")
+			return
+		}
+
+		log.Printf("%v : %v -> %v\n", callsign, flightawareData.Flights[0].Origin.Code, flightawareData.Flights[0].Destination.Code)
+
+		if flightawareData.Flights[0].Origin.Code != "" {
+			aircraftInfo.Origin = flightawareData.Flights[0].Origin.Code
+		}
+
+		if flightawareData.Flights[0].Destination.Code != "" {
+			aircraftInfo.Destination = flightawareData.Flights[0].Destination.Code
+		}
+
+}
+*/
 func requestAdsbExchangeData(reg string) (data types.AdsbExchData) {
 	url := fmt.Sprintf("https://adsbexchange-com1.p.rapidapi.com/v2/registration/%v/", reg)
 	req, _ := http.NewRequest("GET", url, nil)
@@ -252,7 +302,7 @@ func requestAdsbExchangeData(reg string) (data types.AdsbExchData) {
 	data = types.AdsbExchData{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		fmt.Printf("can not unmarshal %v\n%v\n", string(body), err)
+		log.Printf("can not unmarshal %v\n%v\n", string(body), err)
 		return
 	}
 

@@ -7,7 +7,7 @@ type AircraftStatus int
 run go generate tracker/types/aircraftStatus.go to generate stringer function
 */
 const (
-	Standing AircraftStatus = iota
-	Moving
+	Parking AircraftStatus = iota
+	Taxing
 	Airborn
 )

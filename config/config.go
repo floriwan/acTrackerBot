@@ -7,16 +7,18 @@ import (
 )
 
 type Configuration struct {
-	Discordbottoken       string `json:"discordbottoken"`
-	Discrodwebhookid      string `json:"discrodwebhookid"`
-	Discrodwebhooktoken   string `json:"discrodwebhooktoken"`
-	Adsbrapidapikey       string `json:"adsbrapidapikey"`
-	Adsbrapidapihost      string `json:"adsbrapidapihost"`
-	Flightawareapikey     string `json:"flightawareapikey"`
-	Acdburl               string `json:"acdburl"`
-	Acdbfilename          string `json:"acdbfilename"`
-	UpdateIntervall       int    `json:"updateIntervall"`
-	Callsignllistfilename string `json:"callsignllistfilename"`
+	Discordbottoken        string `json:"discordbottoken"`
+	Discrodwebhookid       string `json:"discrodwebhookid"`
+	Discrodwebhooktoken    string `json:"discrodwebhooktoken"`
+	Adsbrapidapikey        string `json:"adsbrapidapikey"`
+	Adsbrapidapihost       string `json:"adsbrapidapihost"`
+	Flightawareapikey      string `json:"flightawareapikey"`
+	Acdburl                string `json:"acdburl"`
+	Acdbfilename           string `json:"acdbfilename"`
+	UpdateIntervall        int    `json:"updateIntervall"`
+	Callsignllistfilename  string `json:"callsignllistfilename"`
+	Aerodataboxrapidapikey string `json:"aerodataboxrapidapikey"`
+	Aerodataboxrapihost    string `json:"aerodataboxrapihost"`
 }
 
 var Conf = Configuration{}

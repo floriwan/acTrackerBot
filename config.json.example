@@ -2,9 +2,11 @@
     "flightawareapikey": "xxxxx",
     "discordauthtoken" : "xxxxx",
     "adsbrapidapikey": "xxxxx",
+    "adsbrapidapihost": "adsbexchange-com1.p.rapidapi.com"
+    "aerodataboxrapidapiapikey": "xxxxx",
+    "aerodataboxrapidapihost" : "aerodatabox.p.rapidapi.com",
     "discrodwebhookid" : "xxxxx",
     "discrodwebhooktoken": "xxxxx",
-    "adsbrapidapihost": "adsbexchange-com1.p.rapidapi.com"
     "acdburl": "https://downloads.adsbexchange.com/downloads/basic-ac-db.json.gz",
     "acdbfilename": "basic-ac-db.json.gz"
     "updateIntervall": 5

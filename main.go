@@ -4,6 +4,7 @@ import (
 	"acTrackerBot/config"
 	"acTrackerBot/discord"
 	"acTrackerBot/tracker"
+	"acTrackerBot/tracker/types"
 	"fmt"
 	"log"
 	"os"
@@ -49,38 +50,25 @@ func main() {
 	for {
 		select {
 		case acStatus := <-statusUpdate:
-			log.Printf("-> rcv aircraft from tracker %v\n", acStatus)
-
-			title := fmt.Sprintf("new status for %v", acStatus.Reg)
-			embed := []*discordgo.MessageEmbed{{
-				Fields: []*discordgo.MessageEmbedField{
-					{Name: "Departure", Value: acStatus.Origin, Inline: true},
-					{Name: "Arrival", Value: acStatus.Destination, Inline: true},
-					{Name: "Status", Value: acStatus.Status.String()},
-					{Name: "Speed (kt)", Value: fmt.Sprintf("%v", acStatus.Speed), Inline: true},
-					{Name: "Altitude (ft)", Value: fmt.Sprintf("%v", acStatus.AltGeom), Inline: true},
-					{Name: "Squawk", Value: acStatus.Squawk},
-					{Name: "Lat", Value: fmt.Sprintf("%v", acStatus.Lat), Inline: true},
-					{Name: "Long", Value: fmt.Sprintf("%v", acStatus.Lon), Inline: true},
-				},
-			}}
-
-			if err := discord.SendComplexMessageWithWebhook(dg, title, embed); err != nil {
-				log.Printf("can not send complex message %v", err)
-			}
-
-			/*discord.SendDiscordMessageWithWebhook(dg,
-			fmt.Sprintf("Registration: **%v** Callsign: **%v**\n```%v->%v status: %v\nground speed: %v kt\nalt geom: %v ft\nlat: %v long: %v```",
-				acStatus.Reg, acStatus.Callsign,
-				acStatus.Origin, acStatus.Destination,
-				acStatus.Status.String(), acStatus.Speed, acStatus.AltGeom, acStatus.Lat, acStatus.Lon))
-			*/
+			processStatusUpdate(dg, acStatus)
 		case <-stop:
 			log.Println("Graceful shutdown")
 			close(tracker.AddRegistrationChannel)
 			close(tracker.RemoveRegistrationChannel)
 			return
 		}
+	}
+
+}
+
+func processStatusUpdate(dg *discordgo.Session, data types.AircraftInformation) {
+	log.Printf("-> rcv aircraft from tracker %+v\n", data)
+
+	title := fmt.Sprintf("new status for %v", data.Reg)
+	embed := discord.GetEmbedMessage(data)
+
+	if err := discord.SendComplexMessageWithWebhook(dg, title, embed); err != nil {
+		log.Printf("can not send complex message %v", err)
 	}
 
 }

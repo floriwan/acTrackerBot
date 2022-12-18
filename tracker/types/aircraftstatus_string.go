@@ -4,9 +4,9 @@ package types
 
 import "strconv"
 
-const _AircraftStatus_name = "StandingMovingAirborn"
+const _AircraftStatus_name = "ParkingTaxingAirborn"
 
-var _AircraftStatus_index = [...]uint8{0, 8, 14, 21}
+var _AircraftStatus_index = [...]uint8{0, 7, 13, 20}
 
 func (i AircraftStatus) String() string {
 	if i < 0 || i >= AircraftStatus(len(_AircraftStatus_index)-1) {
