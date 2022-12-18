@@ -58,10 +58,14 @@ func runTracker() {
 				log.Printf("%v\n", err.Error())
 			}
 		case reg := <-RemoveRegistrationChannel:
-			removeReg(reg)
+			if err := removeReg(reg); err != nil {
+				log.Printf("%v\n", err.Error())
+			}
 		case <-stop:
 			log.Printf("stopping tracker\n")
-			saveRegistrationList()
+			if err := saveRegistrationList(); err != nil {
+				log.Printf("can not save registraion list %v\n", err.Error())
+			}
 			stopAllAircraftTracker()
 		}
 	}
@@ -127,7 +131,9 @@ func readRegistrationList() error {
 
 	// after all registrations are read, add them to the tracker
 	for _, line := range lines {
-		addNewReg(line)
+		if err := addNewReg(line); err != nil {
+			log.Printf("can not add registration %v %v", line, err)
+		}
 	}
 
 	return nil
