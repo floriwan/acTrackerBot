@@ -65,7 +65,9 @@ func main() {
 				},
 			}}
 
-			discord.SendComplexMessageWithWebhook(dg, title, embed)
+			if err := discord.SendComplexMessageWithWebhook(dg, title, embed); err != nil {
+				log.Printf("can not send complex message %v", err)
+			}
 
 			/*discord.SendDiscordMessageWithWebhook(dg,
 			fmt.Sprintf("Registration: **%v** Callsign: **%v**\n```%v->%v status: %v\nground speed: %v kt\nalt geom: %v ft\nlat: %v long: %v```",

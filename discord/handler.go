@@ -31,9 +31,12 @@ func HandlerCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		data := acdb.GetAircraftData(reg[1])
 		//log.Printf("%+v\n", data)
 		if data.Reg == "" {
-			s.ChannelMessageSend(m.ChannelID,
+			_, err := s.ChannelMessageSend(m.ChannelID,
 				fmt.Sprintf("**%v**\nno information found, maybe registration is not valid",
 					reg[1]))
+			if err != nil {
+				log.Printf("error %v\n", err)
+			}
 		} else {
 
 			_, err := s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
@@ -62,13 +65,22 @@ func HandlerCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		reg := strings.Split(m.Content, " ")
 		tracker.AddRegistrationChannel <- reg[1]
 	} else if strings.HasPrefix(m.Content, "!list") {
-		s.ChannelMessageSend(m.ChannelID, tracker.GetRegList())
+		_, err := s.ChannelMessageSend(m.ChannelID, tracker.GetRegList())
+		if err != nil {
+			fmt.Printf("error: %v\n", err)
+		}
 	} else if strings.HasPrefix(m.Content, "!remove ") {
 		reg := strings.Split(m.Content, " ")
 		tracker.RemoveRegistrationChannel <- reg[1]
 	} else if strings.HasPrefix(m.Content, "!help") {
-		s.ChannelMessageSend(m.ChannelID, "commands !add <reg>, !remove <reg>, !list, !info <reg>, !help")
+		_, err := s.ChannelMessageSend(m.ChannelID, "commands !add <reg>, !remove <reg>, !list, !info <reg>, !help")
+		if err != nil {
+			fmt.Printf("error: %v\n", err)
+		}
 	} else {
-		s.ChannelMessageSend(m.ChannelID, "buuh, unknown command ...")
+		_, err := s.ChannelMessageSend(m.ChannelID, "buuh, unknown command ...")
+		if err != nil {
+			fmt.Printf("error: %v\n", err)
+		}
 	}
 }

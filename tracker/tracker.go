@@ -34,7 +34,9 @@ func StartUp() <-chan types.AircraftInformation {
 	stopChannels = make(map[string]chan int)
 
 	readRegistrationDatabase()
-	readRegistrationList()
+	if err := readRegistrationList(); err != nil {
+		log.Printf("unable to import aircraft list %v\n", err)
+	}
 
 	go runTracker()
 
@@ -52,7 +54,9 @@ func runTracker() {
 	for {
 		select {
 		case reg := <-AddRegistrationChannel:
-			addNewReg(reg)
+			if err := addNewReg(reg); err != nil {
+				log.Printf(err.Error())
+			}
 		case reg := <-RemoveRegistrationChannel:
 			removeReg(reg)
 		case <-stop:
